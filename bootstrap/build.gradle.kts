@@ -190,6 +190,7 @@ fun JavaExec.commonRun() {
     }
 
 
+//    jvmArgs("-Djava.net.useSystemProxies=true")
     jvmArgs("-Dtlauncher.logFolder=${layout.buildDirectory.dir("logs").get().asFile}")
     jvmArgs("-Dtlauncher.systemCharset=${Charset.defaultCharset().name()}")
     if (DefaultNativePlatform.getCurrentOperatingSystem().isMacOsX) {

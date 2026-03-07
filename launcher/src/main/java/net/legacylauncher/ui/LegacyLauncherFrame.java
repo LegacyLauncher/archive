@@ -213,7 +213,7 @@ public class LegacyLauncherFrame extends JFrame {
         setWindowTitle();
     }
 
-    public void updateTitle() {
+    public void updateBrand() {
         StringBuilder brandBuilder = new StringBuilder();
 
         if (!LegacyLauncher.getInstance().isDebug()) {
@@ -230,12 +230,13 @@ public class LegacyLauncherFrame extends JFrame {
     }
 
     public void setWindowTitle() {
-        updateTitle();
+        updateBrand();
+        final String locTitle = Localizable.get("title");
         String title;
         if (LegacyLauncher.getInstance().isDebug()) {
-            title = String.format(java.util.Locale.ROOT, "Legacy Launcher %s [%s]", brand, U.memoryStatus());
+            title = String.format(java.util.Locale.ROOT, "%s %s [%s]", locTitle, brand, U.memoryStatus());
         } else {
-            title = String.format(java.util.Locale.ROOT, "Legacy Launcher %s", brand);
+            title = String.format(java.util.Locale.ROOT, "%s %s", locTitle, brand);
         }
 
         setTitle(title);

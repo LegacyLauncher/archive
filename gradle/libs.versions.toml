@@ -8,7 +8,7 @@ commons-lang3 = "3.14.0"
 dbus = "4.3.2"
 download-plugin = "5.6.0"
 flatlaf = "3.4"
-gson = "2.8.9"
+gson = "2.13.2"
 guava = "33.0.0-jre"
 httpcomponents = "5.3.1"
 jackson = "2.16.1"
@@ -31,6 +31,7 @@ oshi = "6.8.2"
 slf4j = "2.0.12"
 spring-boot = "2.7.18" # Spring Boot 3 requires java 17+, so we stuck here with 2.7 branch
 system-theme-detector = "06bbc431eb" # or use anything newer than df12cda
+text-tree = "2.1.2"
 toml4j = "0.7.3"
 xz = "1.9"
 
@@ -74,6 +75,7 @@ slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 spring-boot-loader = { module = "org.springframework.boot:spring-boot-loader", version.ref = "spring-boot" }
 system-theme-detector = { module = "com.github.Dansoftowner:jSystemThemeDetector", version.ref = "system-theme-detector" }
+texttree = { module = "org.barfuin.texttree:text-tree", version.ref = "text-tree" }
 toml4j = { module = "io.hotmoka:toml4j", version.ref = "toml4j" }
 xz = { module = "org.tukaani:xz", version.ref = "xz" }
 

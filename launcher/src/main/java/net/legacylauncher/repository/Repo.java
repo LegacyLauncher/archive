@@ -4,7 +4,6 @@ import net.legacylauncher.util.U;
 import net.legacylauncher.util.ua.LauncherUserAgent;
 
 import java.io.IOException;
-import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Objects;
@@ -21,21 +20,17 @@ public abstract class Repo implements IRepo {
     }
 
     @Override
-    public final URLConnection get(String path, int timeout, Proxy proxy) throws IOException {
-        URL url = Objects.requireNonNull(makeUrl(path), "url");
-        return makeConnection(url, timeout, proxy);
-    }
-
     public final URLConnection get(String path, int timeout) throws IOException {
-        return get(path, timeout, U.getProxy());
+        URL url = Objects.requireNonNull(makeUrl(path), "url");
+        return makeConnection(url, timeout);
     }
 
     public final URLConnection get(String path) throws IOException {
         return get(path, U.getReadTimeout());
     }
 
-    protected static URLConnection makeConnection(URL url, int timeout, Proxy proxy) throws IOException {
-        URLConnection connection = url.openConnection(proxy);
+    protected static URLConnection makeConnection(URL url, int timeout) throws IOException {
+        URLConnection connection = url.openConnection();
 
         connection.setConnectTimeout(timeout);
         connection.setReadTimeout(timeout);

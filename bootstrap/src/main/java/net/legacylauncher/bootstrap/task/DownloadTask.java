@@ -89,7 +89,7 @@ public class DownloadTask extends Task<Void> {
     protected void downloadUrl(URL url) throws IOException, TaskInterruptedException {
         log.info("Downloading: {}", url);
 
-        URLConnection connection = url.openConnection(U.getProxy());
+        URLConnection connection = url.openConnection();
         connection.setConnectTimeout(10_000);
         connection.setReadTimeout(5_000);
         BootstrapUserAgent.set(connection);

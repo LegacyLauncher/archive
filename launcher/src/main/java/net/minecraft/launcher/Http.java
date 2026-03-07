@@ -36,7 +36,7 @@ public class Http {
     private static HttpURLConnection createUrlConnection(URL url) throws IOException {
         Validate.notNull(url);
         log.trace("Opening connection to {}", url);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection(U.getProxy());
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setConnectTimeout(U.getConnectionTimeout());
         connection.setReadTimeout(U.getReadTimeout());
         connection.setUseCaches(false);

@@ -84,6 +84,7 @@ dependencies {
     implementation(libs.nanohttpd)
     implementation(libs.nstweaker)
     implementation(libs.oshi)
+    implementation(libs.texttree)
     implementation(libs.toml4j)
     implementation(libs.xz)
 

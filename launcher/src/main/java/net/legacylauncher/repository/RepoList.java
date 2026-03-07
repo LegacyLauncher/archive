@@ -58,11 +58,11 @@ public class RepoList {
         return relevant;
     }
 
-    public InputStream read(String path, Proxy proxy) throws IOException {
+    public InputStream read(String path) throws IOException {
         List<IRepo> currentRepoList = getRelevant().getList();
         boolean useOldImpl = !currentRepoList.stream().allMatch(repo -> repo instanceof AppenderRepo);
         if (useOldImpl) {
-            return read$old(path, proxy);
+            return read$old(path);
         }
         try {
             return read$selector(currentRepoList, path);
@@ -71,13 +71,13 @@ public class RepoList {
         }
     }
 
-    private InputStream read$old(String path, Proxy proxy) throws IOException {
+    private InputStream read$old(String path) throws IOException {
         IOException ex = null;
         List<IRepo> l = getRelevant().getList();
         int timeout = U.getConnectionTimeout();
         Object total = new Object();
         Time.start(total);
-        log.debug("Fetching from {}: \"{}\", timeout: {}, proxy: {}", name, path, timeout / 1000, proxy);
+        log.debug("Fetching from {}: \"{}\", timeout: {}", name, path, timeout / 1000);
         int attempt = 0;
         for (IRepo repo : l) {
             ++attempt;
@@ -90,7 +90,7 @@ public class RepoList {
                 _path = path;
             }
             try {
-                InputStream result = read(connect(repo, path, timeout, proxy, attempt));
+                InputStream result = read(connect(repo, path, timeout, attempt));
                 long[] deltas = Time.stop(total, current);
                 log.debug("Fetched successfully from {}: \"{}\": {} ms; total: {} ms, attempt: {}",
                         name, _path, deltas[1], deltas[0], attempt);
@@ -137,13 +137,12 @@ public class RepoList {
                 info -> {
                     URLConnection c = Repo.makeConnection(
                             info.getUrl(),
-                            U.getConnectionTimeout(),
-                            U.getProxy()
+                            1_000 * (1 << Math.min(info.getOrdinal(), 6))
                     );
                     c.connect();
                     return HttpConnection.of(c);
                 },
-                5_000,
+                2_000,
                 TimeUnit.MILLISECONDS,
                 AsyncThread.DELAYER,
                 HTTP_EXECUTOR.get()
@@ -172,12 +171,8 @@ public class RepoList {
         }
     }
 
-    public final InputStream read(String path) throws IOException {
-        return read(path, U.getProxy());
-    }
-
-    protected URLConnection connect(IRepo repo, String path, int timeout, Proxy proxy, int attempt) throws IOException {
-        return repo.get(path, timeout, proxy);
+    protected URLConnection connect(IRepo repo, String path, int timeout, int attempt) throws IOException {
+        return repo.get(path, timeout);
     }
 
     protected InputStream read(URLConnection connection) throws IOException {

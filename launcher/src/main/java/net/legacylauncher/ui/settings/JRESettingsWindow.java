@@ -20,6 +20,7 @@ import net.legacylauncher.util.SwingUtil;
 import net.legacylauncher.util.async.AsyncThread;
 import net.minecraft.launcher.updater.VersionSyncInfo;
 import net.minecraft.launcher.versions.CompleteVersion;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -350,6 +351,8 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
                 fileExplorer, true, false);
         customPathField.addChangeListener(s -> {
             if (s != null) {
+                s = StringUtils.removeStart(s, "\"");
+                s = StringUtils.removeEnd(s, "\"");
                 File file = new File(s);
                 if (file.isFile()) {
                     comboBox.sp.global.set(new JavaManagerConfig.Custom(s));

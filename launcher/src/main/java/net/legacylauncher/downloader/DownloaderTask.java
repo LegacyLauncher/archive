@@ -34,7 +34,7 @@ public class DownloaderTask implements Runnable {
     }
 
     private static HttpURLConnection openConnection(String url) throws IOException {
-        return (HttpURLConnection) new URL(url).openConnection(U.getProxy());
+        return (HttpURLConnection) new URL(url).openConnection();
     }
 
     public int getId() {
@@ -132,9 +132,9 @@ public class DownloaderTask implements Runnable {
                     try {
                         if (repo instanceof RepositoryProxy.ProxyRepo) {
                             connection = ((RepositoryProxy.ProxyRepo) repo)
-                                    .get(downloadable.getURL(), attempt * U.getConnectionTimeout(), U.getProxy(), attempt);
+                                    .get(downloadable.getURL(), attempt * U.getConnectionTimeout(), attempt);
                         } else {
-                            connection = repo.get(downloadable.getURL(), attempt * U.getConnectionTimeout(), U.getProxy());
+                            connection = repo.get(downloadable.getURL(), attempt * U.getConnectionTimeout());
                         }
                         downloadURL(connection, timeout, skip, length);
                         return;

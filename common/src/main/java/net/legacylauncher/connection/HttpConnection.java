@@ -35,11 +35,16 @@ public class HttpConnection implements Connection {
         protected final String userAgent;
         protected final Proxy proxy;
 
+        @Deprecated
         public Connector(long connect, long read, String userAgent, Proxy proxy) {
             this.connect = checkInt(connect);
             this.read = checkInt(read);
             this.userAgent = userAgent;
             this.proxy = proxy;
+        }
+
+        public Connector(long connect, long read, String userAgent) {
+            this(connect, read, userAgent, null);
         }
 
         @Override
@@ -55,6 +60,9 @@ public class HttpConnection implements Connection {
         }
 
         public static HttpURLConnection openConnection(URL url, Proxy proxy) throws IOException {
+            if (proxy == null) {
+                return (HttpURLConnection) url.openConnection();
+            }
             return (HttpURLConnection) url.openConnection(proxy);
         }
 

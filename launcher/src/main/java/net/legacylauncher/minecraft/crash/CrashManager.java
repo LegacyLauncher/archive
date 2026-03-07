@@ -23,6 +23,11 @@ import net.minecraft.options.OptionsFile;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.barfuin.texttree.api.DefaultNode;
+import org.barfuin.texttree.api.TextTree;
+import org.barfuin.texttree.api.TreeOptions;
+import org.barfuin.texttree.api.style.AnnotationPosition;
+import org.barfuin.texttree.api.style.TreeStyle;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
@@ -37,12 +42,15 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 @Slf4j
 public final class CrashManager {
     private static final Marker LOG_FLUSHER = MarkerFactory.getMarker("log_flusher");
+
+    private static final TextTree textTree = createTextTreeInstance();
 
     private final ArrayList<CrashManagerListener> listeners = new ArrayList<>();
     private final Watchdog watchdog = new Watchdog();
@@ -60,17 +68,52 @@ public final class CrashManager {
 
     private final Map<String, IEntry> crashEntries = new LinkedHashMap<>();
     private final Map<String, BindableAction> actionsMap = new HashMap<>();
-    private List<String> skipFolders = new ArrayList<>();
-
     private final SystemInfoReporter systemInfoReporter = initSystemInfoPrinter();
-
     private final Entry
             generatedFilesSeekerEntry = new GeneratedFilesSeeker(),
             crashDescriptionSeeker = new CrashDescriptionSeeker(),
             logFlusherEntry = new LogFlusherEntry();
-
     private final List<String> modVersionsFilter = Arrays.asList("forge", "fabric", "rift", "liteloader", "quilt", "betterfoamfix");
-    private final static String[] TOML_PATHS = new String[]{ "META-INF/mods.toml", "META-INF/neoforge.mods.toml" };
+    private List<String> skipFolders = new ArrayList<>();
+    private volatile boolean cancelled;
+
+    private CrashManager(MinecraftLauncher launcher, String version,
+                         ChildProcessLogger processLogger, Charset charset, int exitCode) {
+        this.launcher = launcher;
+        this.version = version;
+        this.processLogger = processLogger;
+        this.charset = Objects.requireNonNull(charset, "charset");
+        this.exitCode = exitCode;
+
+        gson = new GsonBuilder()
+                .registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory())
+                .registerTypeAdapter(CrashEntryList.class, listDeserializer = new CrashEntryList.ListDeserializer(this))
+                .create();
+
+        crash = new Crash(this);
+    }
+
+    public CrashManager(MinecraftLauncher launcher) {
+        this(launcher, launcher.getVersion(), launcher.getProcessLogger(),
+                launcher.getCharset(), launcher.getExitCode());
+    }
+
+    public CrashManager(String version, ChildProcessLogger processLogger,
+                        Charset charset, int exitCode) {
+        this(null, version, processLogger, charset, exitCode);
+    }
+
+    private static TextTree createTextTreeInstance() {
+        TreeOptions to = new TreeOptions();
+        TreeStyle ts = new TreeStyle("├ ", "│ ", "└ ", "‹", "›");
+        to.setStyle(ts);
+        to.setAnnotationPosition(AnnotationPosition.InlineRight);
+        return TextTree.newInstance(to);
+    }
+
+    private static String joinAnnotations(List<String> list) {
+        return list.stream().map(str -> String.format(Locale.ROOT, "[%s]", str)).collect(Collectors.joining(" "));
+    }
 
     private void setupActions() {
         actionsMap.clear();
@@ -150,32 +193,6 @@ public final class CrashManager {
         return external;
     }
 
-    private CrashManager(MinecraftLauncher launcher, String version,
-                         ChildProcessLogger processLogger, Charset charset, int exitCode) {
-        this.launcher = launcher;
-        this.version = version;
-        this.processLogger = processLogger;
-        this.charset = Objects.requireNonNull(charset, "charset");
-        this.exitCode = exitCode;
-
-        gson = new GsonBuilder()
-                .registerTypeAdapterFactory(new LowerCaseEnumTypeAdapterFactory())
-                .registerTypeAdapter(CrashEntryList.class, listDeserializer = new CrashEntryList.ListDeserializer(this))
-                .create();
-
-        crash = new Crash(this);
-    }
-
-    public CrashManager(MinecraftLauncher launcher) {
-        this(launcher, launcher.getVersion(), launcher.getProcessLogger(),
-                launcher.getCharset(), launcher.getExitCode());
-    }
-
-    public CrashManager(String version, ChildProcessLogger processLogger,
-                        Charset charset, int exitCode) {
-        this(null, version, processLogger, charset, exitCode);
-    }
-
     public void startAndJoin() {
         synchronized (watchdog) {
             checkWorking();
@@ -188,8 +205,6 @@ public final class CrashManager {
             }
         }
     }
-
-    private volatile boolean cancelled;
 
     public void cancel() {
         cancelled = true;
@@ -310,6 +325,181 @@ public final class CrashManager {
         } else {
             log.info("Crash report file exist. We'll scan it.");
             return new Scanner(new InputStreamReader(Files.newInputStream(crashFile.toPath()), StandardCharsets.UTF_8));
+        }
+    }
+
+    private static class CrashManagerInterrupted extends Exception {
+        CrashManagerInterrupted() {
+        }
+
+        CrashManagerInterrupted(Throwable cause) {
+            super(cause);
+        }
+    }
+
+    private static class CrashEntryException extends Exception {
+        CrashEntryException(IEntry entry, Throwable cause) {
+            super(entry.toString(), cause);
+        }
+    }
+
+    private static class ErroredMod {
+        private final String name, fileName;
+
+        ErroredMod(String name, String fileName) {
+            this.name = name;
+            this.fileName = fileName;
+        }
+
+        ErroredMod(Matcher matcher) {
+            this(matcher.group(2), matcher.group(3));
+        }
+
+        public String toString() {
+            return name;
+        }
+
+        void append(StringBuilder b) {
+            b.append(name).append(" (").append(fileName).append(")");
+        }
+    }
+
+    private static class BrowseAction extends ArgsAction {
+        private final File gameDir;
+
+        BrowseAction(File gameDir) {
+            super("browse", new String[]{"www", "folder"});
+            this.gameDir = gameDir;
+        }
+
+        @Override
+        void execute(OptionSet args) {
+            if (args.has("www")) {
+                OS.openLink(args.valueOf("www").toString());
+                return;
+            }
+
+            if (args.has("folder")) {
+                String folderName = args.valueOf("folder").toString();
+                File folder;
+                if (folderName.startsWith(".")) {
+                    folder = new File(gameDir, folderName.substring(1));
+                } else {
+                    folder = new File(folderName);
+                }
+                if (folder.isDirectory()) {
+                    OS.openFolder(folder);
+                }
+            }
+        }
+    }
+
+    private static class SetOptionAction extends BindableAction {
+        private final OptionsFile file;
+
+        public SetOptionAction(OptionsFile file) {
+            super("option");
+            this.file = Objects.requireNonNull(file, "file");
+        }
+
+        @Override
+        public void execute(String arg) throws Exception {
+            for (String optionPair : StringUtils.split(arg, ';')) {
+                String[] pair = StringUtils.split(optionPair, ':');
+                String key = pair[0], value = pair[1];
+                file.set(key, value);
+            }
+            file.save();
+            Alert.showLocMessage("crash.actions.set-options");
+        }
+    }
+
+    @Slf4j
+    private static class SetAction extends ArgsAction {
+        private final Map<OptionSpec<String>, String> optionMap = new HashMap<>();
+
+        SetAction() {
+            super("set");
+
+            for (String key : ConfigurationDefaults.getInstance().getMap().keySet()) {
+                optionMap.put(parser.accepts(key).withRequiredArg().ofType(String.class), key);
+            }
+        }
+
+        @Override
+        void execute(OptionSet args) {
+            for (OptionSpec<?> spec : args.specs()) {
+                String key = optionMap.get(spec);
+
+                if (key == null) {
+                    log.warn("Could not find key for spec {}", spec);
+                    continue;
+                }
+
+
+                String value = (String) spec.value(args);
+
+                if ("minecraft.memory".equals(key) && "fix".equals(value)) {
+                    log.info("Migrating minecraft.memory = fix => minecraft.xmx = \"auto\"");
+                    key = "minecraft.xmx";
+                    value = "auto";
+                }
+                log.info("Set configuration key {} = {}", key, value);
+                LegacyLauncher.getInstance().getSettings().set(key, value);
+                if (LegacyLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.isLoaded()) {
+                    LegacyLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.get().updateValues();
+                }
+            }
+        }
+    }
+
+    private static class GuiAction extends BindableAction {
+        public GuiAction() {
+            super("gui");
+        }
+
+        @Override
+        public void execute(String args) {
+            if (args.startsWith("settings")) {
+                LegacyLauncher.getInstance().getFrame().mp.setScene(LegacyLauncher.getInstance().getFrame().mp.defaultScene);
+                LegacyLauncher.getInstance().getFrame().mp.defaultScene.setSidePanel(DefaultScene.SidePanel.SETTINGS);
+                if (args.equals("settings-tlauncher")) {
+                    LegacyLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.get().getTabPane().setSelectedIndex(1);
+                }
+                return;
+            }
+
+            if (args.equals("accounts")) {
+                LegacyLauncher.getInstance().getFrame().mp.setScene(LegacyLauncher.getInstance().getFrame().mp.accountManager.get());
+            }
+
+            if (args.equals("versions")) {
+                LegacyLauncher.getInstance().getFrame().mp.setScene(LegacyLauncher.getInstance().getFrame().mp.versionManager.get());
+            }
+        }
+    }
+
+    private static class ExitAction extends BindableAction {
+        public ExitAction() {
+            super("exit");
+        }
+
+        @Override
+        public void execute(String arg) {
+            LegacyLauncher.getInstance().getUiListeners().getMinecraftUIListener().getCrashProcessingFrame().get().getCrashFrame().setVisible(false);
+        }
+    }
+
+    private static class ForceUpdateAction extends BindableAction {
+        public ForceUpdateAction() {
+            super("force-update");
+        }
+
+        @Override
+        public void execute(String arg) {
+            LegacyLauncher.getInstance().getUiListeners().getMinecraftUIListener().getCrashProcessingFrame().get().getCrashFrame().setVisible(false);
+            LegacyLauncher.getInstance().getFrame().mp.defaultScene.loginForm.checkbox.forceupdate.setSelected(true);
+            LegacyLauncher.getInstance().getFrame().mp.defaultScene.loginForm.startLauncher();
         }
     }
 
@@ -444,42 +634,6 @@ public final class CrashManager {
                 log.error("Error", e);
                 error = e;
             }
-        }
-    }
-
-    private static class CrashManagerInterrupted extends Exception {
-        CrashManagerInterrupted() {
-        }
-
-        CrashManagerInterrupted(Throwable cause) {
-            super(cause);
-        }
-    }
-
-    private static class CrashEntryException extends Exception {
-        CrashEntryException(IEntry entry, Throwable cause) {
-            super(entry.toString(), cause);
-        }
-    }
-
-    private static class ErroredMod {
-        private final String name, fileName;
-
-        ErroredMod(String name, String fileName) {
-            this.name = name;
-            this.fileName = fileName;
-        }
-
-        ErroredMod(Matcher matcher) {
-            this(matcher.group(2), matcher.group(3));
-        }
-
-        public String toString() {
-            return name;
-        }
-
-        void append(StringBuilder b) {
-            b.append(name).append(" (").append(fileName).append(")");
         }
     }
 
@@ -751,36 +905,35 @@ public final class CrashManager {
         }
 
         private void treeDir(File dir, int levelLimit) {
-            treeDir(dir, 0, levelLimit, new StringBuilder());
+            log.info(LOG_FLUSHER, textTree.render(treeDir(dir, 0, levelLimit)));
         }
 
-        private void treeDir(File dir, int currentLevel, int levelLimit, StringBuilder buffer) {
+        private DefaultNode treeDir(File dir, int currentLevel, int levelLimit) {
             if (dir == null) {
-                log.info("skipping null directory");
-                return;
+                return new DefaultNode("skipping null directory");
             }
 
+            DefaultNode node = new DefaultNode(dir.toString());
             if (!dir.isDirectory()) {
-                log.info(LOG_FLUSHER, "{} (not a dir)", dir);
-                return;
+                node.setAnnotation("[not a dir]");
+                return node;
             }
 
             File[] list = Objects.requireNonNull(dir.listFiles(), "dir listing: " + dir.getAbsolutePath());
 
-            if (currentLevel == 0) {
-                log.info(LOG_FLUSHER, "{}", dir);
-            } else if (list.length == 0) {
-                log.info(LOG_FLUSHER, "{}└ [empty]", buffer);
+            if (list.length == 0) {
+                node.setAnnotation("[empty]");
+                return node;
             }
 
             File file;
-            StringBuilder name;
             boolean skipDir;
             File[] subList;
 
             for (int i = 0; i < list.length; i++) {
                 file = list[i];
-                name = new StringBuilder(file.getName());
+                DefaultNode subNode = new DefaultNode(file.getName());
+                node.addChild(subNode);
 
                 subList = null;
                 skipDir = false;
@@ -788,46 +941,39 @@ public final class CrashManager {
                 long length = 0L;
 
                 if (file.isDirectory()) {
+                    subNode.setAnnotation("[dir]");
                     subList = file.listFiles();
 
                     for (String skipFolder : skipFolders) {
                         if (file.getName().equalsIgnoreCase(skipFolder)) {
                             skipDir = true;
-                            name.append(" [skipped]");
+                            subNode.setAnnotation(subNode.getAnnotation() + " [skipped]");
                             break;
                         }
                     }
                     if (!skipDir && (subList == null || subList.length == 0)) {
-                        name.append(" [empty dir]");
+                        subNode.setAnnotation(subNode.getAnnotation() + " [empty]");
                         skipDir = true;
                     }
                 } else {
                     length = file.length();
                     if (length < 0L) {
-                        name.append(" [unknown size]");
+                        subNode.setAnnotation("[unknown size]");
                     } else if (length == 0L) {
-                        name.append(" [empty file]");
+                        subNode.setAnnotation("[empty]");
                     } else {
-                        name.append(" [").append(length < 2048L ? length + " B" : (length / 1024L) + " KiB").append("]");
+                        subNode.setAnnotation(
+                                String.format(Locale.ROOT, "[%s]", length < 2048L ? length + " B" : (length / 1024L) + " KiB")
+                        );
                     }
                 }
-
-                boolean currentlyLatestLevel = i == list.length - 1;
-                if (currentlyLatestLevel)
-                    log.info(LOG_FLUSHER, "{}└ {}", buffer, name);
-                else
-                    log.info(LOG_FLUSHER, "{}├ {}", buffer, name);
-
-                StringBuilder subLevelBuffer = new StringBuilder()
-                        .append(buffer)
-                        .append(currentlyLatestLevel ? "  " : "│ ").append(' ');
 
                 if (file.isFile() && file.getName().endsWith(".jar")) {
                     ZipFile zipFile;
                     try {
                         zipFile = new ZipFile(file, ZipFile.OPEN_READ);
                     } catch (IOException ioE) {
-                        log.info(LOG_FLUSHER, "{}└ [!!!] Corrupted zip: {}", subLevelBuffer, ioE.toString());
+                        subNode.addChild(new DefaultNode("[!!!] Corrupted zip"));
                         continue;
                     }
                     try {
@@ -840,13 +986,18 @@ public final class CrashManager {
                             } catch (IOException e) {
                                 md5Message = e.toString();
                             }
-                            log.debug(LOG_FLUSHER, "{}├ md5 = {}", subLevelBuffer, md5Message);
+                            subNode.addChild(new DefaultNode("md5 = " + md5Message));
                         }
-                        boolean mcmod = tryMcModInfo(zipFile, subLevelBuffer);
-                        mcmod |= tryModsToml(zipFile, subLevelBuffer);
-                        mcmod |= tryFabricMod(zipFile, subLevelBuffer);
-                        if (!mcmod) {
-                            log.debug(LOG_FLUSHER, "{}└ [unknown mod format]", subLevelBuffer);
+                        int beforeSize = subNode.getChildren().size();
+                        Stream.of(
+                                tryMcModInfo(zipFile),
+                                tryModsToml(zipFile),
+                                tryFabricMod(zipFile),
+                                tryQuiltMod(zipFile)
+                        ).flatMap(s -> s).forEachOrdered(subNode::addChild);
+
+                        if (beforeSize == subNode.getChildren().size()) {
+                            subNode.addChild(new DefaultNode("[unknown mod format]"));
                         }
                     } finally {
                         IOUtils.closeQuietly(zipFile);
@@ -854,9 +1005,8 @@ public final class CrashManager {
                 } else if (file.isDirectory() && !skipDir) {
                     if (currentLevel == levelLimit) {
                         String str;
-
                         if (subList != null) {
-                            StringBuilder s = new StringBuilder();
+                            StringBuilder s = new StringBuilder("[dir] ");
 
                             int files = 0, directories = 0;
                             for (File subFile : subList) {
@@ -898,21 +1048,25 @@ public final class CrashManager {
 
                             str = s.toString();
                         } else {
-                            str = "[empty dir]";
+                            str = "[dir] [empty]";
                         }
-                        log.info(LOG_FLUSHER, "{}└ {}", subLevelBuffer, str);
+                        subNode.setAnnotation(str);
                         continue;
                     }
-                    treeDir(file, currentLevel + 1, levelLimit, subLevelBuffer);
+                    treeDir(file, currentLevel + 1, levelLimit).getChildren()
+                            .forEach(subNode::addChild);
                 }
             }
+            return node;
         }
 
-        private boolean tryFabricMod(ZipFile zipFile, StringBuilder buffer) {
+        private Stream<? extends DefaultNode> tryFabricMod(ZipFile zipFile) {
             ZipEntry fabricModZipEntry = zipFile.getEntry("fabric.mod.json");
             if (fabricModZipEntry == null) {
-                return false;
+                return Stream.empty();
             }
+            DefaultNode node = new DefaultNode("Unknown mod id");
+            node.setAnnotation("[Fabric mod]");
             JsonElement fabricModRoot;
             try (InputStreamReader reader = new InputStreamReader(
                     zipFile.getInputStream(fabricModZipEntry),
@@ -920,43 +1074,124 @@ public final class CrashManager {
                 fabricModRoot = Objects.requireNonNull(
                         JsonParser.parseReader(reader), "fabricModRoot");
             } catch (IOException | RuntimeException e) {
-                log.info(LOG_FLUSHER, "{}└ [!!!] Couldn't read fabric.mod.json: {}",
-                        buffer, e.toString());
-                return false;
+                node.addChild(new DefaultNode("[!!!] Couldn't read fabric.mod.json: " + e));
+                return Stream.of(node);
             }
             if (!fabricModRoot.isJsonObject()) {
-                log.info(LOG_FLUSHER, "{}├ [!!!] Not a JSON object: {}", buffer,
-                        fabricModRoot);
-                return false;
+                node.addChild(new DefaultNode("[!!!] Not a JSON object: " + fabricModRoot));
+                return Stream.of(node);
             }
             JsonObject fabricModObj = fabricModRoot.getAsJsonObject();
-            List<String> keys = Arrays.asList(
-                    "id",
-                    "version",
-                    "depends"
-            );
-            List<Pair<String, JsonElement>> keyPairs = keys.stream()
+            JsonElement modId = fabricModObj.get("id");
+            if (modId == null) {
+                node.addChild(new DefaultNode("[!!!] No mod id found: " + fabricModObj));
+                return Stream.of(node);
+            }
+            node.setText(modId.getAsString());
+            Stream.of(
+                            "version"
+                    )
                     .map(key -> Pair.of(key, fabricModObj.get(key)))
                     .filter(p -> p.getValue() != null)
-                    .collect(Collectors.toList());
-            displayKeyPairs(keyPairs, buffer, true);
-            return true;
+                    .map(keyPair1 -> new DefaultNode(keyPair1.getKey() + " = " + keyPair1.getValue()))
+                    .forEach(node::addChild);
+            JsonElement fabricModDepObj = fabricModObj.get("depends");
+            if (fabricModDepObj != null && fabricModDepObj.isJsonObject() && !fabricModDepObj.getAsJsonObject().entrySet().isEmpty()) {
+                DefaultNode depNode = new DefaultNode("[dependencies]");
+                Set<Map.Entry<String, JsonElement>> depKeyPairs = fabricModDepObj.getAsJsonObject().entrySet();
+                for (Map.Entry<String, ?> keyPair : depKeyPairs) {
+                    depNode.addChild(new DefaultNode(keyPair.getKey() + " = " + keyPair.getValue()));
+                }
+                if (!depNode.getChildren().isEmpty()) {
+                    node.addChild(depNode);
+                }
+            }
+            return Stream.of(node);
         }
 
-        private boolean tryModsToml(ZipFile zipFile, StringBuilder buffer) {
-            boolean return_value = false;
-            for (String entry: TOML_PATHS) {
-                return_value |=tryModsToml(entry, zipFile, buffer);
+        private Stream<? extends DefaultNode> tryQuiltMod(ZipFile zipFile) {
+            ZipEntry fabricModZipEntry = zipFile.getEntry("quilt.mod.json");
+            if (fabricModZipEntry == null) {
+                return Stream.empty();
             }
-            return return_value;
+            DefaultNode node = new DefaultNode("Unknown mod id");
+            node.setAnnotation("[Quilt mod]");
+            JsonElement quiltModRoot;
+            try (InputStreamReader reader = new InputStreamReader(
+                    zipFile.getInputStream(fabricModZipEntry),
+                    StandardCharsets.UTF_8)) {
+                quiltModRoot = Objects.requireNonNull(
+                        JsonParser.parseReader(reader), "quiltModRoot");
+            } catch (IOException | RuntimeException e) {
+                node.addChild(new DefaultNode("[!!!] Couldn't read fabric.mod.json: " + e));
+                return Stream.of(node);
+            }
+            if (!quiltModRoot.isJsonObject()) {
+                node.addChild(new DefaultNode("[!!!] Not a JSON object: " + quiltModRoot));
+                return Stream.of(node);
+            }
+            JsonObject quiltLoaderObj;
+            try {
+                quiltLoaderObj = quiltModRoot.getAsJsonObject().getAsJsonObject("quilt_loader");
+            } catch (ClassCastException e) {
+                node.addChild(new DefaultNode("[!!!] Not a JSON object: " + quiltModRoot.getAsJsonObject().get("quilt_loader")));
+                return Stream.of(node);
+            }
+            JsonElement modId = quiltLoaderObj.get("id");
+            if (modId == null) {
+                node.addChild(new DefaultNode("[!!!] No mod id found: " + quiltLoaderObj));
+                return Stream.of(node);
+            }
+            node.setText(modId.getAsString());
+            Stream.of(
+                            "group",
+                            "version"
+                    )
+                    .map(key -> Pair.of(key, quiltLoaderObj.get(key)))
+                    .filter(p -> p.getValue() != null)
+                    .map(keyPair1 -> new DefaultNode(keyPair1.getKey() + " = " + keyPair1.getValue()))
+                    .forEach(node::addChild);
+            JsonElement quiltModDepObj = quiltLoaderObj.get("depends");
+            if (quiltModDepObj != null && quiltModDepObj.isJsonArray() && !quiltModDepObj.getAsJsonArray().isEmpty()) {
+                DefaultNode depNode = new DefaultNode("[dependencies]");
+                quiltModDepObj.getAsJsonArray().asList().stream().map(JsonElement::getAsJsonObject).map(e -> {
+                    JsonPrimitive id = e.has("id") ? e.getAsJsonPrimitive("id") : null;
+                    JsonPrimitive versions = e.has("versions") ? e.getAsJsonPrimitive("versions") : null;
+                    JsonPrimitive unless = e.has("unless") ? e.getAsJsonPrimitive("unless") : null;
+                    if (id == null) return new DefaultNode("invalid dependency without id");
+                    DefaultNode dependencyNode;
+                    if (versions != null) {
+                        dependencyNode = new DefaultNode(id.getAsString() + " = " + versions);
+                    } else {
+                        dependencyNode = new DefaultNode(id.getAsString());
+                    }
+                    if (unless != null) {
+                        dependencyNode.setAnnotation("unless " + unless.getAsString());
+                    }
+                    return dependencyNode;
+                }).forEachOrdered(depNode::addChild);
+                if (!depNode.getChildren().isEmpty()) {
+                    node.addChild(depNode);
+                }
+            }
+            return Stream.of(node);
+        }
+
+        private Stream<? extends DefaultNode> tryModsToml(ZipFile zipFile) {
+            return Stream.concat(
+                    tryModsToml("META-INF/mods.toml", zipFile, "Forge"),
+                    tryModsToml("META-INF/neoforge.mods.toml", zipFile, "NeoForge")
+            );
         }
 
         @SuppressWarnings("unchecked")
-        private boolean tryModsToml(String entry, ZipFile zipFile, StringBuilder buffer) {
+        private Stream<? extends DefaultNode> tryModsToml(String entry, ZipFile zipFile, String modType) {
             ZipEntry modsTomlZipEntry = zipFile.getEntry(entry);
             if (modsTomlZipEntry == null) {
-                return false;
+                return Stream.empty();
             }
+
+            String modAnnotation = String.format(Locale.ROOT, "[%s mod]", modType);
             Toml toml = new Toml();
             try (InputStreamReader reader = new InputStreamReader(
                     zipFile.getInputStream(modsTomlZipEntry),
@@ -964,9 +1199,9 @@ public final class CrashManager {
             )) {
                 toml.read(reader);
             } catch (IOException | RuntimeException e) {
-                log.info(LOG_FLUSHER, "{}└ [!!!] Couldn't read mods.toml: {}",
-                        buffer, e.toString());
-                return false;
+                DefaultNode node = new DefaultNode("[!!!] Couldn't read " + entry + ": " + e);
+                node.setAnnotation(modAnnotation);
+                return Stream.of(node);
             }
             Map<String, Object> map = toml.toMap();
             Object dependenciesObj = map.get("dependencies");
@@ -974,16 +1209,26 @@ public final class CrashManager {
                 Object modsObj = map.get("mods");
                 if (modsObj instanceof List) {
                     List<Map<String, Object>> mods = (List<Map<String, Object>>) modsObj;
-                    for (Map<String, Object> mod : mods) {
+
+                    return mods.stream().map(mod -> {
+                        DefaultNode modNode = new DefaultNode("Unknown mod id");
+                        modNode.setAnnotation(modAnnotation);
+                        String modId = getModId(mod);
+                        if (modId == null) {
+                            modNode.addChild(new DefaultNode("[!!!] Mod ID not found: " + mod));
+                            return modNode;
+                        }
+                        modNode.setText(modId);
+
                         displayModsTomlMod(
                                 mod,
-                                findModDependenciesToml(dependenciesObj, getModId(mod)),
-                                buffer
-                        );
-                    }
+                                findModDependenciesToml(dependenciesObj, getModId(mod))
+                        ).forEachOrdered(modNode::addChild);
+                        return modNode;
+                    });
                 }
             }
-            return true;
+            return Stream.empty();
         }
 
         private String getModId(Map<String, Object> mod) {
@@ -1012,16 +1257,13 @@ public final class CrashManager {
             return null;
         }
 
-        private void displayModsTomlMod(
+        private Stream<? extends DefaultNode> displayModsTomlMod(
                 Map<String, Object> mod,
-                List<Map<String, Object>> dependencies,
-                StringBuilder buffer) {
-            List<String> keys = Arrays.asList(
-                    "modId",
-                    "version",
-                    "displayURL"
-            );
-            List<Pair<String, Object>> keyPairs = keys.stream()
+                List<Map<String, Object>> dependencies) {
+            List<Pair<String, Object>> keyPairs = Stream.of(
+                            "version",
+                            "displayURL"
+                    )
                     .map(key -> Pair.of(key, mod.get(key)))
                     .filter(p -> p.getValue() != null)
                     .filter(p -> {
@@ -1034,36 +1276,45 @@ public final class CrashManager {
                         return !s.startsWith("${");
                     })
                     .collect(Collectors.toList());
+
+            Stream<? extends DefaultNode> keyPairsNodes;
             if (keyPairs.isEmpty()) {
-                log.info(LOG_FLUSHER, "{}└ [no known toml keys]: {}", buffer, mod);
+                keyPairsNodes = Stream.of(new DefaultNode("[no known toml keys: " + mod + "]"));
             } else {
-                boolean hasDependencies = dependencies != null && !dependencies.isEmpty();
-                displayKeyPairs(keyPairs, buffer, !hasDependencies);
-                if (hasDependencies) {
-                    List<Pair<String, Object>> depKeyPairs = dependencies.stream()
-                            .filter(d -> {
-                                Object side = d.get("side");
-                                return "BOTH".equals(side) || "CLIENT".equals(side);
-                            })
-                            .filter(d -> d.get("mandatory") == Boolean.TRUE)
-                            .filter(d -> d.containsKey("modId"))
-                            .map(d -> Pair.of(
-                                    String.valueOf(d.get("modId")),
-                                    d.getOrDefault("versionRange", "any")
-                            ))
-                            .collect(Collectors.toList());
-                    StringBuilder depBuffer = new StringBuilder(buffer).append("    ");
-                    log.info(LOG_FLUSHER, "{}└ [dependencies]", buffer);
-                    displayKeyPairs(depKeyPairs, depBuffer, true);
+                keyPairsNodes = keyPairs.stream().map(keyPair -> new DefaultNode(keyPair.getKey() + " = " + keyPair.getValue()));
+            }
+
+            boolean hasDependencies = dependencies != null && !dependencies.isEmpty();
+
+            if (hasDependencies) {
+                DefaultNode depNode = new DefaultNode("[dependencies]");
+                dependencies.stream()
+                        .filter(d -> {
+                            Object side = d.get("side");
+                            return "BOTH".equals(side) || "CLIENT".equals(side);
+                        })
+                        .filter(d -> d.get("mandatory") == Boolean.TRUE)
+                        .filter(d -> d.containsKey("modId"))
+                        .map(d -> Pair.of(
+                                String.valueOf(d.get("modId")),
+                                d.getOrDefault("versionRange", "any")
+                        ))
+                        .map(keyPair -> new DefaultNode(keyPair.getKey() + " = " + keyPair.getValue()))
+                        .forEachOrdered(depNode::addChild);
+                if (!depNode.getChildren().isEmpty()) {
+                    return Stream.concat(keyPairsNodes, Stream.of(depNode));
                 }
             }
+
+            return keyPairsNodes;
         }
 
-        private boolean tryMcModInfo(ZipFile zipFile, StringBuilder buffer) {
+        private Stream<? extends DefaultNode> tryMcModInfo(ZipFile zipFile) {
             ZipEntry mcmodZipEntry = zipFile.getEntry("mcmod.info");
             if (mcmodZipEntry == null) {
-                return false;
+                return Stream.empty();
             }
+
             JsonElement mcmodRoot;
             try (InputStreamReader reader = new InputStreamReader(
                     zipFile.getInputStream(mcmodZipEntry),
@@ -1071,49 +1322,57 @@ public final class CrashManager {
                 mcmodRoot = Objects.requireNonNull(
                         JsonParser.parseReader(reader), "mcmodRoot");
             } catch (IOException | RuntimeException e) {
-                log.info(LOG_FLUSHER, "{}├ [!!!] Couldn't read mcmod.info: {}",
-                        buffer, e.toString());
-                return false;
+                DefaultNode node = new DefaultNode("[!!!] Couldn't read mcmod.info: " + e);
+                node.setAnnotation("[Legacy Forge mod]");
+                return Stream.of(node);
             }
+
+            JsonArray modList = null;
+
             if (mcmodRoot.isJsonArray()) {
                 // modListVersion = 1
-                for (JsonElement mcmodEntry : mcmodRoot.getAsJsonArray()) {
-                    if (mcmodEntry.isJsonObject()) {
-                        displayMcModInfo(mcmodEntry.getAsJsonObject(), buffer);
-                    } else {
-                        log.info(LOG_FLUSHER, "{}├ [!!!] Not a JSON object: {}", buffer, mcmodRoot);
-                    }
-                }
-                return true;
+
+                modList = mcmodRoot.getAsJsonArray();
             } else if (mcmodRoot.isJsonObject()) {
                 // modListVersion > 1
                 JsonElement modListElement = mcmodRoot.getAsJsonObject().get("modList");
+
                 if (modListElement != null && modListElement.isJsonArray()) {
-                    for (JsonElement modListEntry : modListElement.getAsJsonArray()) {
-                        if (modListEntry.isJsonObject()) {
-                            displayMcModInfo(modListEntry.getAsJsonObject(), buffer);
-                        } else {
-                            log.info(LOG_FLUSHER, "{}├ [!!!] Not a JSON object: {}",
-                                    buffer, modListEntry);
-                        }
-                    }
-                    return true;
+                    modList = modListElement.getAsJsonArray();
                 }
             }
-            log.info(LOG_FLUSHER, "{}├ [!!!] Unknown or invalid mcmod.info: {}", buffer, mcmodRoot);
-            return false;
+
+            if (modList == null) {
+                DefaultNode node = new DefaultNode("[!!!] Unknown or invalid mcmod.info: " + mcmodRoot);
+                node.setAnnotation("[Legacy Forge mod]");
+                return Stream.of(node);
+            }
+
+            return mcmodRoot.getAsJsonArray().asList().stream().map(entry -> {
+                if (entry.isJsonObject()) {
+                    return displayMcModInfo(entry.getAsJsonObject());
+                } else {
+                    return new DefaultNode("[!!!] Not a JSON object: " + mcmodRoot);
+                }
+            });
         }
 
-        private void displayMcModInfo(JsonObject mcmod, StringBuilder buffer) {
-            List<String> keys = Arrays.asList(
-                    "modid",
-                    "version",
-                    "mcversion",
-                    "url",
-                    "requiredMods",
-                    "dependencies"
-            );
-            List<Pair<String, JsonElement>> keyPairs = keys.stream()
+        private DefaultNode displayMcModInfo(JsonObject mcmod) {
+            DefaultNode node = new DefaultNode("Unknown mod id");
+            node.setAnnotation("[Legacy Forge mod]");
+
+            JsonElement modId = mcmod.get("modid");
+            if (modId.isJsonPrimitive()) {
+                node.setText(modId.getAsString());
+            }
+
+            List<? extends DefaultNode> keyPairs = Stream.of(
+                            "version",
+                            "mcversion",
+                            "url",
+                            "requiredMods",
+                            "dependencies"
+                    )
                     .map(key -> Pair.of(key, mcmod.get(key)))
                     .filter(p -> p.getValue() != null)
                     .filter(p -> {
@@ -1129,173 +1388,17 @@ public final class CrashManager {
                         String s = pv.getAsString();
                         return !s.startsWith("@") || !s.endsWith("@");
                     })
+                    .map(p -> new DefaultNode(p.getKey() + " = " + p.getValue()))
                     .collect(Collectors.toList());
+
             if (keyPairs.isEmpty()) {
-                log.info(LOG_FLUSHER, "{}└ [no known mcmod keys]: {}", buffer, mcmod);
+                node.addChild(new DefaultNode("[No known mcmod keys]: " + mcmod));
             } else {
-                displayKeyPairs(keyPairs, buffer, true);
-            }
-        }
-
-        private void displayKeyPairs(List<? extends Pair<String, ?>> keyPairs, StringBuilder buffer, boolean endTree) {
-            if (keyPairs.isEmpty()) {
-                return;
-            }
-            if (keyPairs.size() > 1) {
-                log.info(LOG_FLUSHER, "{}├ {} = {}", buffer,
-                        keyPairs.get(0).getKey(), keyPairs.get(0).getValue());
-                for (int i = 1; i < keyPairs.size() - 1; i++) {
-                    Pair<String, ?> pair = keyPairs.get(i);
-                    log.info(LOG_FLUSHER, "{}├ {} = {}", buffer, pair.getKey(), pair.getValue());
-                }
-            }
-            int lastIndex = keyPairs.size() - 1;
-            if (endTree) {
-                log.info(LOG_FLUSHER, "{}└ {} = {}", buffer,
-                        keyPairs.get(lastIndex).getKey(), keyPairs.get(lastIndex).getValue());
-            } else {
-                log.info(LOG_FLUSHER, "{}├ {} = {}", buffer,
-                        keyPairs.get(lastIndex).getKey(), keyPairs.get(lastIndex).getValue());
-            }
-        }
-    }
-
-    private static class BrowseAction extends ArgsAction {
-        private final File gameDir;
-
-        BrowseAction(File gameDir) {
-            super("browse", new String[]{"www", "folder"});
-            this.gameDir = gameDir;
-        }
-
-        @Override
-        void execute(OptionSet args) {
-            if (args.has("www")) {
-                OS.openLink(args.valueOf("www").toString());
-                return;
+                keyPairs.forEach(node::addChild);
             }
 
-            if (args.has("folder")) {
-                String folderName = args.valueOf("folder").toString();
-                File folder;
-                if (folderName.startsWith(".")) {
-                    folder = new File(gameDir, folderName.substring(1));
-                } else {
-                    folder = new File(folderName);
-                }
-                if (folder.isDirectory()) {
-                    OS.openFolder(folder);
-                }
-            }
-        }
-    }
-
-    private static class SetOptionAction extends BindableAction {
-        private final OptionsFile file;
-
-        public SetOptionAction(OptionsFile file) {
-            super("option");
-            this.file = Objects.requireNonNull(file, "file");
+            return node;
         }
 
-        @Override
-        public void execute(String arg) throws Exception {
-            for (String optionPair : StringUtils.split(arg, ';')) {
-                String[] pair = StringUtils.split(optionPair, ':');
-                String key = pair[0], value = pair[1];
-                file.set(key, value);
-            }
-            file.save();
-            Alert.showLocMessage("crash.actions.set-options");
-        }
-    }
-
-    @Slf4j
-    private static class SetAction extends ArgsAction {
-        private final Map<OptionSpec<String>, String> optionMap = new HashMap<>();
-
-        SetAction() {
-            super("set");
-
-            for (String key : ConfigurationDefaults.getInstance().getMap().keySet()) {
-                optionMap.put(parser.accepts(key).withRequiredArg().ofType(String.class), key);
-            }
-        }
-
-        @Override
-        void execute(OptionSet args) {
-            for (OptionSpec<?> spec : args.specs()) {
-                String key = optionMap.get(spec);
-
-                if (key == null) {
-                    log.warn("Could not find key for spec {}", spec);
-                    continue;
-                }
-
-
-                String value = (String) spec.value(args);
-
-                if ("minecraft.memory".equals(key) && "fix".equals(value)) {
-                    log.info("Migrating minecraft.memory = fix => minecraft.xmx = \"auto\"");
-                    key = "minecraft.xmx";
-                    value = "auto";
-                }
-                log.info("Set configuration key {} = {}", key, value);
-                LegacyLauncher.getInstance().getSettings().set(key, value);
-                if (LegacyLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.isLoaded()) {
-                    LegacyLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.get().updateValues();
-                }
-            }
-        }
-    }
-
-    private static class GuiAction extends BindableAction {
-        public GuiAction() {
-            super("gui");
-        }
-
-        @Override
-        public void execute(String args) {
-            if (args.startsWith("settings")) {
-                LegacyLauncher.getInstance().getFrame().mp.setScene(LegacyLauncher.getInstance().getFrame().mp.defaultScene);
-                LegacyLauncher.getInstance().getFrame().mp.defaultScene.setSidePanel(DefaultScene.SidePanel.SETTINGS);
-                if (args.equals("settings-tlauncher")) {
-                    LegacyLauncher.getInstance().getFrame().mp.defaultScene.settingsForm.get().getTabPane().setSelectedIndex(1);
-                }
-                return;
-            }
-
-            if (args.equals("accounts")) {
-                LegacyLauncher.getInstance().getFrame().mp.setScene(LegacyLauncher.getInstance().getFrame().mp.accountManager.get());
-            }
-
-            if (args.equals("versions")) {
-                LegacyLauncher.getInstance().getFrame().mp.setScene(LegacyLauncher.getInstance().getFrame().mp.versionManager.get());
-            }
-        }
-    }
-
-    private static class ExitAction extends BindableAction {
-        public ExitAction() {
-            super("exit");
-        }
-
-        @Override
-        public void execute(String arg) {
-            LegacyLauncher.getInstance().getUiListeners().getMinecraftUIListener().getCrashProcessingFrame().get().getCrashFrame().setVisible(false);
-        }
-    }
-
-    private static class ForceUpdateAction extends BindableAction {
-        public ForceUpdateAction() {
-            super("force-update");
-        }
-
-        @Override
-        public void execute(String arg) {
-            LegacyLauncher.getInstance().getUiListeners().getMinecraftUIListener().getCrashProcessingFrame().get().getCrashFrame().setVisible(false);
-            LegacyLauncher.getInstance().getFrame().mp.defaultScene.loginForm.checkbox.forceupdate.setSelected(true);
-            LegacyLauncher.getInstance().getFrame().mp.defaultScene.loginForm.startLauncher();
-        }
     }
 }

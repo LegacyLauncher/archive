@@ -155,7 +155,7 @@ public final class Stats {
     private static HttpURLConnection createUrlConnection(URL url) throws IOException {
         Objects.requireNonNull(url);
         log.trace("Opening connection to {}", url);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection(U.getProxy());
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setConnectTimeout(U.getConnectionTimeout());
         connection.setReadTimeout(U.getReadTimeout());
         connection.setUseCaches(false);

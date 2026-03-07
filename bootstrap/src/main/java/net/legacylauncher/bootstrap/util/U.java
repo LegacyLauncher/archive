@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.Locale;
 
 public final class U {
+    @Deprecated
     public static Proxy getProxy() {
         return Proxy.NO_PROXY;
     }

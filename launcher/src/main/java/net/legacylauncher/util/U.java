@@ -375,6 +375,7 @@ public class U {
         return 15000;
     }
 
+    @Deprecated
     public static Proxy getProxy() {
         return Proxy.NO_PROXY;
     }

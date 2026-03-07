@@ -14,7 +14,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
-import java.net.Proxy;
 import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -180,10 +179,6 @@ public class Configuration extends SimpleConfiguration {
 
     public Direction getDirection(String key) {
         return Direction.parse(get(key));
-    }
-
-    public Proxy getProxy() {
-        return Proxy.NO_PROXY;
     }
 
     public UUID getClient() {

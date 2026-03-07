@@ -56,7 +56,7 @@ public class Pasta {
     private PastaLink makeRequest(URL url) throws IOException, PastaException {
         HttpURLConnection c = null;
         try {
-            c = (HttpURLConnection) url.openConnection(U.getProxy());
+            c = (HttpURLConnection) url.openConnection();
             c.setRequestProperty("Content-Type", "text/plain; charset=\"UTF-8\"");
             BootstrapUserAgent.set(c);
             c.setRequestMethod("POST");

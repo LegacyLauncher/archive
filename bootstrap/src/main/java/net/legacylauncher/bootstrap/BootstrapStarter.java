@@ -49,6 +49,7 @@ public final class BootstrapStarter {
         List<String> jvmArgs = new ArrayList<>();
         jvmArgs.add("-Xmx128m");
         jvmArgs.add("-Dfile.encoding=UTF-8");
+        jvmArgs.add("-Djava.net.useSystemProxies=true");
         jvmArgs.add("-Dtlauncher.systemCharset=" + Charset.defaultCharset().name());
         jvmArgs.add("-Dtlauncher.logFolder=" + OS.getSystemRelatedDirectory("tlauncher/logs", true));
 

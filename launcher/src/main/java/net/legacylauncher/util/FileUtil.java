@@ -388,7 +388,7 @@ public class FileUtil {
     }
 
     public static <S> S tryOpenWithBackoff(StreamOpener<S> opener, Path path) throws InterruptedException, IOException {
-        return tryOpenWithBackoff(opener, path, 10, 200, TimeUnit.MILLISECONDS);
+        return tryOpenWithBackoff(opener, path, 10, 1000, TimeUnit.MILLISECONDS);
     }
 
     public interface StreamOpener<S> {

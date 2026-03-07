@@ -79,8 +79,7 @@ public class UpdateMeta {
                             new BadHostsFilter<>(U.BAD_HOSTS, new HttpConnection.Connector(
                                     CONNECT_TIMEOUT * attempt,
                                     READ_TIMEOUT * attempt,
-                                    BootstrapUserAgent.USER_AGENT,
-                                    U.getProxy()
+                                    BootstrapUserAgent.USER_AGENT
                             )),
                             NEW_REQUEST_TIMEOUT * attempt,
                             TimeUnit.MILLISECONDS,

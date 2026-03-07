@@ -97,8 +97,8 @@ public class RepositoryProxy {
         }
 
         @Override
-        public URLConnection get(String path, int timeout, Proxy proxy) throws IOException {
-            return get(path, timeout, proxy, 1);
+        public URLConnection get(String path, int timeout) throws IOException {
+            return get(path, timeout, 1);
         }
 
         @Override
@@ -106,14 +106,14 @@ public class RepositoryProxy {
             return Collections.singletonList(proxyHost);
         }
 
-        public URLConnection get(String path, int timeout, Proxy proxy, int attempt) throws IOException {
+        public URLConnection get(String path, int timeout, int attempt) throws IOException {
             URL originalUrl = new URL(path);
 
             IOException ioE = new IOException("not a first attempt; failed");
             if (attempt == 1) {
                 log.debug("First attempt, no proxy: {}", originalUrl);
                 try {
-                    return openHttpConnection(originalUrl, proxy, timeout);
+                    return openHttpConnection(originalUrl, timeout);
                 } catch (IOException ioE1) {
                     ioE = ioE1;
                     log.warn("Failed to open connection to {}; error: {}", originalUrl, ioE.toString());
@@ -149,7 +149,7 @@ public class RepositoryProxy {
 
             HttpURLConnection connection;
             try {
-                connection = openHttpConnection(proxyRequestUrl, proxy, timeout);
+                connection = openHttpConnection(proxyRequestUrl, timeout);
             } catch (IOException oneMoreIOE) {
                 log.error("Proxying request failed! URL: {}", proxyRequestUrl);
                 throw oneMoreIOE;
@@ -174,8 +174,8 @@ public class RepositoryProxy {
             }
         }
 
-        private static HttpURLConnection openHttpConnection(URL url, Proxy proxy, int timeout) throws IOException {
-            HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection(proxy);
+        private static HttpURLConnection openHttpConnection(URL url, int timeout) throws IOException {
+            HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
             setup(httpURLConnection, timeout);
             return httpURLConnection;
         }
@@ -197,11 +197,11 @@ public class RepositoryProxy {
         }
 
         @Override
-        protected URLConnection connect(IRepo repo, String path, int timeout, Proxy proxy, int attempt) throws IOException {
+        protected URLConnection connect(IRepo repo, String path, int timeout, int attempt) throws IOException {
             if (repo instanceof ProxyRepo) {
-                return ((ProxyRepo) repo).get(path, timeout, proxy, attempt);
+                return ((ProxyRepo) repo).get(path, timeout, attempt);
             } else {
-                return super.connect(repo, path, timeout, proxy, attempt);
+                return super.connect(repo, path, timeout, attempt);
             }
         }
     }

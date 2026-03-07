@@ -17,12 +17,11 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 public class CrashProcessingFrame extends BActionFrame implements CrashManagerListener {
-    private final CrashFrame frame;
+    private CrashFrame frame;
 
     private CrashManager manager;
 
     public CrashProcessingFrame() {
-        frame = new CrashFrame();
 
         setMinimumSize(SwingUtil.magnify(new Dimension(500, 150)));
         addWindowListener(new WindowAdapter() {
@@ -66,7 +65,16 @@ public class CrashProcessingFrame extends BActionFrame implements CrashManagerLi
     @Override
     public void onCrashManagerComplete(CrashManager manager, Crash crash) {
         this.manager = null;
-        frame.setCrash(crash);
+        final CrashFrame localFrame = new CrashFrame();
+        localFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowDeactivated(WindowEvent e) {
+                localFrame.removeWindowListener(this);
+                frame = null;
+            }
+        });
+        frame = localFrame;
+        localFrame.setCrash(crash);
         setVisible(false);
     }
 
@@ -85,6 +93,9 @@ public class CrashProcessingFrame extends BActionFrame implements CrashManagerLi
     @Override
     public void updateLocale() {
         super.updateLocale();
-        frame.updateLocale();
+        final CrashFrame localFrame = frame;
+        if (localFrame != null) {
+            localFrame.updateLocale();
+        }
     }
 }
