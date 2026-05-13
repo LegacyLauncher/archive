@@ -1,6 +1,9 @@
 ru_RU: >
-  – Локализованное название на русском
+  – Исправлено несколько незначительных ошибок<br/>
+  – Улучшены некоторые переводы<br/>
+  – Добавлен перевод лаунчера на белорусский язык
 
 en_US: >
-  – Support localizable title
-  
+  – Small bugfixes<br/>
+  – Some localizations improvements<br/>
+  – Added Belarusian localization to the launcher

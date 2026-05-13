@@ -63,6 +63,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
     private final LocalizableCheckbox useCurrentTrustStoreCheckbox;
 
     private boolean saveValues;
+    private boolean isError;
 
     public JRESettingsWindow(JREComboBox comboBox) {
         this.comboBox = comboBox;
@@ -129,6 +130,21 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
         initJvmArgs(cfgs, c);
         mcArgsField = addConfig(cfgs, c, "mc-args");
         wrapperCommandField = addConfig(cfgs, c, "wrapper-command");
+        // TODO show proper error message
+        wrapperCommandField.getDocument().addDocumentListener(new DocumentChangeListener() {
+            @Override
+            public void documentChanged(DocumentEvent e) {
+                String str = wrapperCommandField.getValue();
+                if (str != null && str.startsWith("-")) {
+                    log.debug("User tried to type JVM args into Wrapper Command field: {}", str);
+                    wrapperCommandField.putClientProperty("JComponent.outline", "error");
+                    isError = true;
+                    return;
+                }
+                wrapperCommandField.putClientProperty("JComponent.outline", null);
+                isError = false;
+            }
+        });
 
         add(cfgs);
 
@@ -213,7 +229,7 @@ public class JRESettingsWindow extends ExtendedFrame implements LocalizableCompo
     }
 
     private void saveSelfValues() {
-        if (!saveValues) {
+        if (!saveValues || isError) {
             return;
         }
         JavaManagerConfig javaManagerConfigOld = comboBox.sp.global.get(JavaManagerConfig.class);

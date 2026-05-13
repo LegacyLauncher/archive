@@ -1348,7 +1348,7 @@ public final class CrashManager {
                 return Stream.of(node);
             }
 
-            return mcmodRoot.getAsJsonArray().asList().stream().map(entry -> {
+            return modList.asList().stream().map(entry -> {
                 if (entry.isJsonObject()) {
                     return displayMcModInfo(entry.getAsJsonObject());
                 } else {

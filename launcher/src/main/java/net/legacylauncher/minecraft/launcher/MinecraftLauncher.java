@@ -1741,18 +1741,22 @@ public class MinecraftLauncher implements JavaProcessListener {
         args.add("-XX:+OptimizeStringConcat");
 
         if (isExperimentEnabled(Configuration.Experiments.ZGC_GENERATIONAL)) {
-            if (jreMajorVersion >= 21) {
+            if (jreMajorVersion >= 21 && jreMajorVersion < 23) {
                 log.warn("Experimental: Use Generational ZGC");
                 args.add("-XX:+ZGenerational");
             } else {
-                log.warn("Experimental: Generational ZGC: requirement did not met: jreMajorVersion: required 21, got {}", jreMajorVersion);
+                log.warn("Experimental: Generational ZGC: requirement did not met: jreMajorVersion: required [21..23], got {}", jreMajorVersion);
             }
         }
     }
 
-    private void addShenandoahOptimizedArguments(List<String> args) {
+    private void addShenandoahOptimizedArguments(List<String> args, int jreMajorVersion) {
         args.add("-XX:+UseShenandoahGC");
-        args.add("-XX:ShenandoahGCMode=iu");
+        if (jreMajorVersion >= 24) { // iu mode was replaced with generational
+            args.add("-XX:ShenandoahGCMode=generational");
+        } else {
+            args.add("-XX:ShenandoahGCMode=iu");
+        }
         args.add("-XX:+UseStringDeduplication");
         args.add("-XX:+OptimizeStringConcat");
         args.add("-XX:ShenandoahGuaranteedGCInterval=1000000");
@@ -1780,7 +1784,7 @@ public class MinecraftLauncher implements JavaProcessListener {
             // TODO check jre by launching with Shenandoah?
             if (jreMajorVersion >= 11) {
                 log.info("Will use Shenandoah GC");
-                addShenandoahOptimizedArguments(args);
+                addShenandoahOptimizedArguments(args, jreMajorVersion);
                 return;
             }
 

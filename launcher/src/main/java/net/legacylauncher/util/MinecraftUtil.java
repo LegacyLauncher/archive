@@ -3,12 +3,14 @@ package net.legacylauncher.util;
 import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.LegacyLauncher;
 import net.legacylauncher.configuration.Static;
+import net.legacylauncher.managers.ProfileManager;
 import net.legacylauncher.ui.alert.Alert;
 import net.legacylauncher.ui.explorer.FileExplorer;
 
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 @Slf4j
 public class MinecraftUtil {
@@ -16,7 +18,7 @@ public class MinecraftUtil {
     private static JFrame parent;
 
     private static boolean checkDirectory(File directory) {
-        return directory.isDirectory() && directory.canRead() && directory.canWrite();
+        return directory.getAbsoluteFile().getParent() != null && directory.isDirectory() && directory.canRead() && directory.canWrite();
     }
 
     private static File chooseWorkingDir(String path) {
@@ -138,6 +140,19 @@ public class MinecraftUtil {
     }
 
     public static File getDefaultWorkingDirectory() {
+        // Workaround: check possible install location to restore path in case of config corruption
+        if (OS.WINDOWS.isCurrent()) {
+            try {
+                File jarPath = FileUtil.getRunningJar();
+                File possibleGamePath = new File(jarPath.getParentFile().getParentFile(), "game");
+                File possibleProfilesPath = new File(possibleGamePath, ProfileManager.DEFAULT_PROFILE_FILENAME);
+                if (possibleGamePath.isDirectory() && possibleProfilesPath.isFile())
+                    return possibleGamePath;
+            } catch (RuntimeException ignored) {
+
+            }
+        }
+
         return getSystemRelatedDirectory(Static.getFolder());
     }
 

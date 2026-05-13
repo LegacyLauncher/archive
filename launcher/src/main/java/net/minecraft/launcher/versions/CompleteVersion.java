@@ -674,9 +674,13 @@ public class CompleteVersion implements Version, Cloneable {
         Validate.notNull(mainClass, "mainClass");
     }
 
-    protected static final Pattern familyPattern = Pattern.compile("([a-z]*[\\d]\\.[\\d]+).*");
+    protected static final Pattern familyPattern = Pattern.compile("([a-z]*\\d+\\.\\d+).*");
 
     public static String getFamilyOf(String id) {
+        if (id == null) {
+            return null;
+        }
+
         String family;
 
         Matcher matcher = familyPattern.matcher(id);
@@ -684,6 +688,9 @@ public class CompleteVersion implements Version, Cloneable {
             family = matcher.group(1);
         } else {
             family = null;
+        }
+        if ("26.1".equals(family)) {
+            return null;
         }
 
         return family;
