@@ -176,6 +176,10 @@ public class LoginForm extends CenterPanel implements MinecraftListener, Authent
                 } catch (LoginException e) {
                     log.error("Caught an error on listener {}", listener, e);
                     error = e;
+                } catch (Exception e) {
+                    log.error("Caught an unknown error on listener {}", listener, e);
+                    error = e;
+                    Alert.showLocError("launcher.error.title", "launcher.error.unknown", e);
                 }
 
                 if (error != null) {

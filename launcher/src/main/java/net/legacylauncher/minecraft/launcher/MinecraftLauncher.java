@@ -2,6 +2,7 @@ package net.legacylauncher.minecraft.launcher;
 
 import com.google.common.collect.Streams;
 import com.google.gson.Gson;
+import com.google.gson.JsonParser;
 import lombok.extern.slf4j.Slf4j;
 import me.cortex.jarscanner.Detector;
 import net.legacylauncher.LegacyLauncher;
@@ -60,10 +61,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
+import java.util.zip.*;
 
 @Slf4j
 public class MinecraftLauncher implements JavaProcessListener {
@@ -249,6 +247,26 @@ public class MinecraftLauncher implements JavaProcessListener {
                     listener.onMinecraftAbort();
                 }
             } else {
+                String loggableVersion;
+                try {
+                    Path versionJsonPath = MinecraftUtil.getWorkingDirectory().toPath()
+                            .resolve("versions")
+                            .resolve(versionName)
+                            .resolve(versionName + ".json");
+
+                    long versionJsonSize = Files.size(versionJsonPath);
+                    if (versionJsonSize > 256 * 1024) { // 256 KiB
+                        loggableVersion = "!! version json size is too long (" + versionJsonSize + " bytes)";
+                    } else {
+                        try (Reader reader = Files.newBufferedReader(versionJsonPath, StandardCharsets.UTF_8)) {
+                            loggableVersion = JsonParser.parseReader(reader).toString();
+                        }
+                    }
+                } catch (Exception ex) {
+                    loggableVersion = "!! errored !! " + ex;
+                }
+                log.error("Unknown exception. Version json: {}", loggableVersion);
+
                 for (MinecraftListener listener : listeners) {
                     listener.onMinecraftError(e);
                 }
@@ -925,7 +943,8 @@ public class MinecraftLauncher implements JavaProcessListener {
             programArgs.addAll(userArgs);
         });
 
-        launcher = new JavaProcessLauncher(charset, Objects.requireNonNull(jreExec, "jreExec"), new String[0]);
+        if (javaVersion == null) getJreMajorVersion();
+        launcher = new JavaProcessLauncher(charset, Objects.requireNonNull(jreExec, "jreExec"), javaVersion.getMajor() >= 9);
         launcher.directory(isLauncher ? rootDir : gameDir);
 
         javaManagerConfig.getWrapperCommand().ifPresent(s -> {
@@ -1337,8 +1356,18 @@ public class MinecraftLauncher implements JavaProcessListener {
     private void fixArguments(List<String> args, ArgumentType type) {
         if (type == ArgumentType.JVM) {
             if (ramSize >= 2048) {
-                args.removeIf(it -> it.startsWith("-Xss"));
-                args.add("-Xss2M");
+                int j = -1;
+                for (int i = 0; i < args.size(); i++) {
+                    if (args.get(i).startsWith("-Xss")) {
+                        j = i;
+                        break;
+                    }
+                }
+                if (j >= 0) {
+                    args.set(j, "-Xss2M");
+                } else {
+                    args.add(0, "-Xss2M");
+                }
             }
         }
     }
@@ -1838,6 +1867,11 @@ public class MinecraftLauncher implements JavaProcessListener {
 
         if (javaVersion == null)
             getJreMajorVersion();
+
+        if (javaManager == null) {
+            log.warn("Minecraft JRE version is null, skipping replacing trust store");
+            return;
+        }
 
         if (OS.JAVA_VERSION.compareTo(javaVersion) <= 0) {
             log.info("Minecraft JRE ({}) is same or newer than Launcher JRE ({})", javaVersion.getVersion(), OS.JAVA_VERSION.getVersion());

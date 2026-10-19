@@ -58,6 +58,7 @@ public class RepoList {
         return relevant;
     }
 
+    @Deprecated
     public InputStream read(String path) throws IOException {
         List<IRepo> currentRepoList = getRelevant().getList();
         boolean useOldImpl = !currentRepoList.stream().allMatch(repo -> repo instanceof AppenderRepo);

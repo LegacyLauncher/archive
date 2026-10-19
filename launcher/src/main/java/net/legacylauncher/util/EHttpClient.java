@@ -5,6 +5,7 @@ import net.legacylauncher.ipc.SystemDefaultResolverIPC;
 import net.legacylauncher.util.http.HttpRequestRetryStrategy;
 import net.legacylauncher.util.http.RetryingRangeContentResponseHandler;
 import net.legacylauncher.util.ua.LauncherUserAgent;
+import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.fluent.Content;
 import org.apache.hc.client5.http.fluent.Executor;
 import org.apache.hc.client5.http.fluent.Request;
@@ -30,6 +31,7 @@ import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 public final class EHttpClient {
     private static final Lazy<Registry<ConnectionSocketFactory>> defaultRegistry = Lazy.of(() -> RegistryBuilder.<ConnectionSocketFactory>create()
@@ -55,17 +57,23 @@ public final class EHttpClient {
     }
 
     public static HttpClientBuilder builder() {
+        PoolingHttpClientConnectionManager poolingConnectionManager = new PoolingHttpClientConnectionManager(
+                defaultRegistry.get(),
+                PoolConcurrencyPolicy.STRICT,
+                PoolReusePolicy.LIFO,
+                TimeValue.ofMinutes(1),
+                null,
+                resolver,
+                null);
+        poolingConnectionManager.setDefaultConnectionConfig(ConnectionConfig.custom()
+                .setConnectTimeout(30, TimeUnit.SECONDS)
+                .setSocketTimeout(30, TimeUnit.SECONDS)
+                .build()
+        );
         return HttpClients.custom()
                 .setUserAgent(LauncherUserAgent.USER_AGENT)
                 .setRetryStrategy(new HttpRequestRetryStrategy())
-                .setConnectionManager(new PoolingHttpClientConnectionManager(
-                        defaultRegistry.get(),
-                        PoolConcurrencyPolicy.STRICT,
-                        PoolReusePolicy.LIFO,
-                        TimeValue.ofMinutes(1),
-                        null,
-                        resolver,
-                        null));
+                .setConnectionManager(poolingConnectionManager);
     }
 
     public static CloseableHttpClient createRepeatable() {

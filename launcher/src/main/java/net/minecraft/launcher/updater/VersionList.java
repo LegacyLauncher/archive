@@ -17,9 +17,7 @@ import net.minecraft.launcher.versions.json.DateTypeAdapter;
 import net.minecraft.launcher.versions.json.LowerCaseEnumTypeAdapterFactory;
 import org.apache.commons.io.IOUtils;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
@@ -69,21 +67,20 @@ public abstract class VersionList {
             throw new NullPointerException("Version cannot be NULL!");
         } else {
             CompleteVersion complete;
-            InputStreamReader reader = null;
+            Reader reader = null;
             try {
                 if (version.getUrl() == null) {
                     reader = getUrl("versions/" + version.getID() + "/" + version.getID() + ".json");
                 } else {
                     URL url = new URL(version.getUrl());
-                    InputStream input;
                     if (RepositoryProxy.canBeProxied(url)) {
-                        input = RepositoryProxy.getProxyRepoList().read(url.toString());
+                        String contents = RepositoryProxy.requestMaybeProxy(url.toString());
+                        reader = new StringReader(contents);
                     } else {
                         URLConnection connection = url.openConnection();
                         LauncherUserAgent.set(connection);
-                        input = connection.getInputStream();
+                        reader = new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8);
                     }
-                    reader = new InputStreamReader(input, StandardCharsets.UTF_8);
                 }
                 complete = gson.fromJson(reader, CompleteVersion.class);
             } finally {

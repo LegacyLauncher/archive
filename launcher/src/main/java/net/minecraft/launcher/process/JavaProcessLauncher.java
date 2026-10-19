@@ -1,36 +1,41 @@
 package net.minecraft.launcher.process;
 
+import lombok.extern.slf4j.Slf4j;
 import net.legacylauncher.minecraft.launcher.ProcessHook;
 import net.legacylauncher.util.OS;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.UnsupportedCharsetException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 public class JavaProcessLauncher {
     public static final String COMMAND_TOKEN = "%command%";
     private final Charset charset;
     private final String jvmPath;
     private final List<String> commands;
+    private final boolean allowArgumentFiles;
     private File directory;
     private ProcessBuilder process;
     private ProcessHook hook = ProcessHook.None.INSTANCE;
     private List<String> wrapperCommand;
+    private static final Charset nativeCharset = getNativeCharset();
 
-    public JavaProcessLauncher(Charset charset, String jvmPath, String[] commands) {
+    public JavaProcessLauncher(Charset charset, String jvmPath, boolean allowArgumentFiles) {
         if (jvmPath == null) {
             jvmPath = OS.getJavaPath();
         }
 
         this.charset = charset;
         this.jvmPath = jvmPath;
+        this.allowArgumentFiles = allowArgumentFiles;
         this.commands = new ArrayList<>();
-        Collections.addAll(this.commands, commands);
     }
 
     public String getJvmPath() {
@@ -43,14 +48,75 @@ public class JavaProcessLauncher {
 
     public ProcessBuilder createProcess() {
         if (process == null) {
-            process = (new ProcessBuilder(getFullCommands())).directory(directory).redirectErrorStream(true);
+            List<String> fullCommand;
+            if (allowArgumentFiles) {
+                try {
+                    Path argsFile = Files.createTempFile("ll", "args");
+                    log.info("Using @argfile, path: {}, charset: {}", argsFile, nativeCharset);
+                    try (Writer writer = Files.newBufferedWriter(argsFile, nativeCharset)) {
+                        for (String arg : commands) {
+                            writer.append(escapeArgFile(arg));
+                            writer.append("\n");
+                        }
+                    }
+                    fullCommand = wrapCommand(Stream.of(getJavaPath(), String.format("@%s", argsFile.toAbsolutePath())));
+                    addHook(new DeleteFileHook(argsFile));
+                } catch (Exception ignored) {
+                    // fallback to plain args command
+                    fullCommand = getFullCommands();
+                }
+            } else {
+                fullCommand = getFullCommands();
+            }
+            process = new ProcessBuilder(fullCommand);
+            process.directory(directory).redirectErrorStream(true);
             hook.enrichProcess(process);
         }
 
         return process;
     }
 
-    List<String> getFullCommands() {
+    private String escapeArgFile(String arg) {
+        if ("".equals(arg)) {
+            return "\"\"";
+        }
+        if (!arg.contains(" ") && !arg.contains("\n") && !arg.contains("\r") && !arg.contains("\t") && !arg.contains("\f") && !arg.contains("\\")) {
+            return arg;
+        }
+        StringBuilder escaped = new StringBuilder();
+        escaped.append("\"");
+        for (int i = 0; i < arg.length(); i++) {
+            char c = arg.charAt(i);
+            switch (c) {
+                case '\n':
+                    escaped.append("\\n");
+                    break;
+                case '\r':
+                    escaped.append("\\r");
+                    break;
+                case '\t':
+                    escaped.append("\\t");
+                    break;
+                case '\f':
+                    escaped.append("\\f");
+                    break;
+                case '\\':
+                    escaped.append("\\\\");
+                    break;
+                default:
+                    escaped.append(c);
+                    break;
+            }
+        }
+        escaped.append("\"");
+        return escaped.toString();
+    }
+
+    private List<String> getFullCommands() {
+        return wrapCommand(Stream.concat(Stream.of(getJavaPath()), commands.stream()));
+    }
+
+    private List<String> wrapCommand(Stream<? extends String> command) {
         Stream<String> cmdLine;
         if (wrapperCommand == null || wrapperCommand.isEmpty()) {
             cmdLine = Stream.of(COMMAND_TOKEN);
@@ -59,7 +125,7 @@ public class JavaProcessLauncher {
         }
         return cmdLine.flatMap(s -> {
             if (COMMAND_TOKEN.equals(s)) {
-                return Stream.concat(Stream.of(getJavaPath()), commands.stream());
+                return command;
             } else {
                 return Stream.of(s);
             }
@@ -138,5 +204,32 @@ public class JavaProcessLauncher {
             throw new IllegalStateException("%command% token should be presented exactly once");
         }
         this.wrapperCommand = wrapperCommand;
+    }
+
+    private static Charset getNativeCharset() {
+        String charset = System.getProperty("native.encoding", System.getProperty("sun.jnu.encoding"));
+        if (charset != null)
+            try {
+                return Charset.forName(charset);
+            } catch (UnsupportedCharsetException ignored) {
+                return Charset.defaultCharset();
+            }
+        return Charset.defaultCharset();
+    }
+
+    private static class DeleteFileHook implements ProcessHook {
+        private final Path path;
+
+        private DeleteFileHook(Path path) {
+            this.path = path;
+        }
+
+        @Override
+        public void processDestroyed(Process process) {
+            try {
+                Files.deleteIfExists(path);
+            } catch (IOException ignored) {
+            }
+        }
     }
 }
